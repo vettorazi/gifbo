@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>teste</title>
+  </head>
+  <script src='gifshot.js'></script>
+
+
+          <!-- Third Party CSS Dependencies -->
+          <link rel="stylesheet" href="css/dependencies/bootstrap.css">
+          <link rel="stylesheet" href="css/dependencies/prism.css">
+          <link rel="stylesheet" href="css/dependencies/select.css">
+          <!-- Custom CSS styles -->
+          <link rel="stylesheet" href="css/style.css">
+  <script>
+  // By default, a user's webcam is used to create the animated GIF
+  (function(window, document) {
+    var createGIFButton = document.querySelector('#create-gif'),
+      gifSource = document.querySelector('#GIFSource'),
+      gifType = document.querySelector('#GIFType'),
+      interval = document.querySelector("#interval"),
+      numFrames = document.querySelector("#numFrames"),
+      gifHeight = document.querySelector("#gifHeight"),
+      gifWidth = document.querySelector("#gifWidth"),
+      progressBar = document.querySelector("progress"),
+      text = document.querySelector('#gifText'),
+      fontWeight = document.querySelector('#fontWeight'),
+      fontSize = document.querySelector('#fontSize'),
+      fontFamily = document.querySelector('#fontFamily'),
+      fontColor = document.querySelector('#fontColor'),
+      textAlign = document.querySelector('#textAlign'),
+      textBaseline = document.querySelector('#textBaseline'),
+      sampleInterval = document.querySelector('#sampleInterval'),
+      numWorkers = document.querySelector('#numWorkers'),
+      gifshotImagePreview = document.querySelector('.gifshot-image-preview-section'),
+      placeholderDiv = document.querySelector('.placeholder-div'),
+      placeholderDivDimensions = document.querySelector('.placeholder-div-dimensions'),
+      gifshotCode = document.querySelector('.gifshot-code'),
+      gifshotCodeTemplate = document.querySelector('.gifshot-code-template'),
+      getSelectedOptions = function() {
+        return {
+          'gifWidth': +gifWidth.value,
+          'gifHeight': +gifHeight.value,
+          'images': gifSource.value === 'images' ? ['http://i.imgur.com/2OO33vX.jpg', 'http://i.imgur.com/qOwVaSN.png', 'http://i.imgur.com/Vo5mFZJ.gif'] : false,
+          'video': gifSource.value === 'video' ? ['example.mp4', 'example.ogv'] : false,
+          'interval': +interval.value,
+          'numFrames': +numFrames.value,
+          'text': text.value,
+          'fontWeight': fontWeight.value,
+          'fontSize': fontSize.value + 'px',
+          'fontFamily': fontFamily.value,
+          'fontColor': fontColor.value,
+          'textAlign': textAlign.value,
+          'textBaseline': textBaseline.value,
+          'sampleInterval': +sampleInterval.value,
+          'numWorkers': +numWorkers.value
+        }
+      },
+      passedOptions,
+      updateCodeBlock = function(obj) {
+        obj = obj || {};
+        var targetElem = obj.targetElem,
+          selectedOptions = getSelectedOptions(),
+          options = (function() {
+            var obj = {};
+
+            _.each(selectedOptions, function(val, key) {
+              if (val) {
+                obj[key] = val;
+              }
+            });
+
+            return obj;
+          }()),
+          template = _.template(gifshotCodeTemplate.innerHTML, {
+            gifshot: window.gifshot,
+            selectedOptions: options,
+            method: gifType.value === 'snapshot' ? 'takeSnapShot' : 'createGIF'
+          }),
+          code = escodegen.generate(esprima.parse(template), {
+            format: {
+              safeConcatenation: true
+            }
+          });
+
+        gifshotCode.innerHTML = code;
+
+        Prism.highlightElement(gifshotCode);
+
+        if (targetElem && (targetElem.id === 'gifWidth' || targetElem.id === 'gifHeight')) {
+          if (selectedOptions.gifHeight && selectedOptions.gifWidth) {
+            gifshotImagePreview.innerHTML = '';
+            placeholderDiv.style.height = selectedOptions.gifHeight + 'px';
+            placeholderDiv.style.width = selectedOptions.gifWidth + 'px';
+            placeholderDivDimensions.innerHTML = selectedOptions.gifWidth + ' x ' + selectedOptions.gifHeight;
+            if (selectedOptions.gifWidth < 60 || selectedOptions.gifHeight < 20) {
+              placeholderDivDimensions.classList.add('hidden');
+            } else {
+              console.log('placeholderDivDimensions.classList: ', placeholderDivDimensions.classList);
+              placeholderDivDimensions.classList.remove('hidden');
+            }
+            placeholderDiv.classList.remove('hidden');
+          } else {
+            placeholderDiv.classList.add('hidden');
+          }
+        }
+      },
+      bindEvents = function() {
+        createGIFButton.addEventListener('click', function(e) {
+          passedOptions = _.merge(_.clone(getSelectedOptions()), {
+            'progressCallback': function(captureProgress) {
+              gifshotImagePreview.innerHTML = '';
+              placeholderDiv.classList.add('hidden');
+              progressBar.classList.remove('hidden');
+              progressBar.value = captureProgress;
+            }
+          });
+
+          var method = gifType.value === 'snapshot' ? 'takeSnapShot' : 'createGIF';
+
+          gifshot[method](passedOptions, function(obj) {
+            if (!obj.error) {
+              var image = obj.image,
+                animatedImage = document.createElement('img');
+              animatedImage.src = image;
+
+              progressBar.classList.add('hidden');
+              progressBar.value = 0;
+
+              placeholderDiv.classList.add('hidden');
+              gifshotImagePreview.innerHTML = '';
+              gifshotImagePreview.appendChild(animatedImage);
+            } else {
+              console.log('obj.error', obj.error);
+              console.log('obj.errorCode', obj.errorCode);
+              console.log('obj.errorMsg', obj.errorMsg);
+            }
+          });
+        }, false);
+
+        document.addEventListener('change', function(e) {
+          updateCodeBlock({
+            targetElem: e.target
+          });
+        });
+
+        document.addEventListener('keyup', function(e) {
+          updateCodeBlock({
+            targetElem: e.target
+          });
+        });
+      };
+
+    bindEvents();
+    updateCodeBlock({
+      targetElem: gifWidth
+    });
+  }(window, document));
+  gifshot.createGIF({}, function(obj) {
+      if(!obj.error) {
+          var image = obj.image,
+          animatedImage = document.createElement('img');
+          animatedImage.src = image;
+          document.body.appendChild(animatedImage);
+      }
+  });
+// Put event listeners into place
+// window.addEventListener("DOMContentLoaded", function() {
+// 	// Grab elements, create settings, etc.
+// 	var canvas = document.getElementById("canvas"),
+// 		context = canvas.getContext("2d"),
+// 		video = document.getElementById("video"),
+// 		videoObj = { "video": true },
+// 		errBack = function(error) {
+// 			console.log("Video capture error: ", error.code);
+// 		};
+//
+// 	// Put video listeners into place
+// 	if(navigator.getUserMedia) { // Standard
+// 		navigator.getUserMedia(videoObj, function(stream) {
+// 			video.src = stream;
+// 			video.play();
+// 		}, errBack);
+// 	} else if(navigator.webkitGetUserMedia) { // WebKit-prefixed
+// 		navigator.webkitGetUserMedia(videoObj, function(stream){
+// 			video.src = window.webkitURL.createObjectURL(stream);
+// 			video.play();
+// 		}, errBack);
+// 	}
+// 	else if(navigator.mozGetUserMedia) { // Firefox-prefixed
+// 		navigator.mozGetUserMedia(videoObj, function(stream){
+// 			video.src = window.URL.createObjectURL(stream);
+// 			video.play();
+// 		}, errBack);
+// 	}
+// }, false);
+</script>
+  <body>
+    <div class="col-md-5 text-center preview-section">
+      <h3>
+        Preview
+      </h3>
+      <section class="gifshot-image-preview-section"></section>
+      <div class="placeholder-div hidden">
+        <span class="placeholder-div-dimensions"></span>
+      </div>
+      <progress max="1" value="0" class="gifshot-progress-bar hidden"></progress>
+      <!-- <video id="video" width="640" height="480" autoplay></video>
+<button id="createGIFButton">Snap Photo</button>
+<canvas id="canvas" width="640" height="480"></canvas> -->
+    </div>
+  </div>
+</div>
+</section>
+<span class="options-button-group">
+  <button type="button" id="create-gif" class="btn btn-large btn-primary create-gif-button">Criar gif!</button>
+</span>
+  </body>
+</html>

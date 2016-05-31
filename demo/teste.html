@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>teste</title>
+  </head>
+  <script src='gifshot.js'></script>
+  <script src="js/demo.js"></script>
+
+          <!-- Third Party CSS Dependencies -->
+          <link rel="stylesheet" href="css/dependencies/bootstrap.css">
+          <link rel="stylesheet" href="css/dependencies/prism.css">
+          <link rel="stylesheet" href="css/dependencies/select.css">
+
+          <!-- Custom CSS styles -->
+          <link rel="stylesheet" href="css/style.css">
+  <script src="js/dependencies/gifshot.js"></script>
+  <script src="js/dependencies/prism.min.js"></script>
+  <script src="js/dependencies/esprima.min.js"></script>
+  <script src="js/dependencies/escodegen.min.js"></script>
+  <script src="js/dependencies/lodash.min.js"></script>
+  <script src="js/dependencies/classList.js"></script>
+  <script>
+  // By default, a user's webcam is used to create the animated GIF
+  gifshot.createGIF({
+      video: [
+          'example.mp4',
+          'example.ogv'
+      ],
+      interval: 1,
+      numFrames: 11
+  }, function (obj) {
+      if (!obj.error) {
+          var image = obj.image, animatedImage = document.createElement('img');
+          animatedImage.src = image;
+          document.body.appendChild(animatedImage);
+      }
+  });
+
+</script>
+  <body>
+    <div class="col-md-5 text-center preview-section">
+      <h3>
+        Preview
+      </h3>
+      <section class="gifshot-image-preview-section"></section>
+      <div class="placeholder-div hidden">
+        <span class="placeholder-div-dimensions"></span>
+      </div>
+      <progress max="1" value="0" class="gifshot-progress-bar hidden"></progress>
+    </div>
+  </div>
+</div>
+</section>
+<span class="options-button-group">
+  <button type="button" id="create-gif" class="btn btn-large btn-primary create-gif-button">Create GIF</button>
+</span>
+  </body>
+</html>
